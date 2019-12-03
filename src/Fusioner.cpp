@@ -251,6 +251,7 @@ void Fusioner::init(vector<Mat>& srcs){
     }
     LOG("[INFO] Matching Arucos...");
     while(count){
+        int icount = count;
         for(int i = 1; i < arucos.size() ; i++){
             if(!arucos_success[i]){
                 for(int j = 0; j < arucos.size(); j++){
@@ -279,6 +280,10 @@ void Fusioner::init(vector<Mat>& srcs){
                     }
                 }
             }
+        }
+        if(icount == count){
+            LOG("[Error] There is an image alone.(No aruco matched with others')");
+            exit(-1);
         }
     }
     getResult();
