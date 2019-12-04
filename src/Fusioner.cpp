@@ -27,34 +27,73 @@ double Fusioner::compute(ImageAruco& src0, ImageAruco& src1){
     vector<pair<int, int>> idxMatch = match(src0,src1);
     double angleSum = 0;
     double scale = 0;
-    for(int i = 0; i < idxMatch.size(); i++){
-        int id_0 = idxMatch[i].first;
-        int id_1 = idxMatch[i].second;
-        Point2f v0,v1;
-        {
-            Point p0 = src0.corners[id_0][0];
-            Point p2 = src0.corners[id_0][2];
-            v0.x = p2.x-p0.x;
-            v0.y = p2.y-p0.y;
-            //line(src0.image,p0,p2,Scalar(0,0,255),3);
+    
+    if (idxMatch.size() >= 2){
+        for(int i = 1; i < idxMatch.size(); i++){
+            int id_0 = idxMatch[i].first;
+            int id_00 = idxMatch[i-1].first;
+            int id_1 = idxMatch[i].second;
+            int id_10 = idxMatch[i-1].second;
+            Point2f v0,v1;
+            {
+                Point p0 = src0.corners[id_0][0];
+                Point p1 = src0.corners[id_0][2];
+                Point p2 = src0.corners[id_00][0];
+                Point p3 = src0.corners[id_00][2];
+                v0.x = ((p1.x + p0.x) - (p2.x + p3.x))*0.5;
+                v0.y = ((p1.y + p0.y) - (p2.y + p3.y))*0.5;
+                //line(src0.image,p0,p2,Scalar(0,0,255),3);
+            }
+            {
+                Point p0 = src1.corners[id_1][0];
+                Point p1 = src1.corners[id_1][2];
+                Point p2 = src1.corners[id_10][0];
+                Point p3 = src1.corners[id_10][2];
+                v1.x = ((p1.x + p0.x) - (p2.x + p3.x))*0.5;
+                v1.y = ((p1.y + p0.y) - (p2.y + p3.y))*0.5;
+                //line(src1.image,p0,p2,Scalar(0,0,255),3);
+            }
+            double label = asin((v0.x*v1.y-v0.y*v1.x) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))) );
+            double angle = 360*acos(((v0.x*v1.x)+(v0.y*v1.y)) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))))/(2*CV_PI);
+            angle *= label < 0 ? -1 : 1;
+            angleSum += angle;
+            scale += sqrt(pow(v0.x,2)+pow(v0.y,2))/sqrt(pow(v1.x,2)+pow(v1.y,2));
         }
-        {
-            Point p0 = src1.corners[id_1][0];
-            Point p2 = src1.corners[id_1][2];
-            
-            v1.x = p2.x-p0.x;
-            v1.y = p2.y-p0.y;
-            //line(src1.image,p0,p2,Scalar(0,0,255),3);
+        angleSum /= idxMatch.size()-1;
+        //scale /= idxMatch.size() -1;
+        scale = 1;
+    }else{
+        for(int i = 0; i < idxMatch.size(); i++){
+            int id_0 = idxMatch[i].first;
+            int id_1 = idxMatch[i].second;
+            Point2f v0,v1;
+            {
+                Point p0 = src0.corners[id_0][0];
+                Point p2 = src0.corners[id_0][2];
+                v0.x = p2.x-p0.x;
+                v0.y = p2.y-p0.y;
+                //line(src0.image,p0,p2,Scalar(0,0,255),3);
+            }
+            {
+                Point p0 = src1.corners[id_1][0];
+                Point p2 = src1.corners[id_1][2];
+                
+                v1.x = p2.x-p0.x;
+                v1.y = p2.y-p0.y;
+                //line(src1.image,p0,p2,Scalar(0,0,255),3);
+            }
+            double label = asin((v0.x*v1.y-v0.y*v1.x) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))) );
+            double angle = 360*acos(((v0.x*v1.x)+(v0.y*v1.y)) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))))/(2*CV_PI);
+            angle *= label < 0 ? -1 : 1;
+            angleSum += angle;
+            scale += sqrt(pow(v0.x,2)+pow(v0.y,2))/sqrt(pow(v1.x,2)+pow(v1.y,2));
         }
-        double label = asin((v0.x*v1.y-v0.y*v1.x) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))) );
-        double angle = 360*acos(((v0.x*v1.x)+(v0.y*v1.y)) / (sqrt(pow(v0.x,2)+pow(v0.y,2))*sqrt(pow(v1.x,2)+pow(v1.y,2))))/(2*CV_PI);
-        angle *= label < 0 ? -1 : 1;
-        angleSum += angle;
-        scale += sqrt(pow(v0.x,2)+pow(v0.y,2))/sqrt(pow(v1.x,2)+pow(v1.y,2));
+        angleSum /= idxMatch.size();
+        //scale /= idxMatch.size();
+        scale = 1;
     }
-    angleSum /= idxMatch.size();
-    //scale /= idxMatch.size();
-    scale = 1;
+    
+    
     resize(src1.image,src1.image,Size(),scale,scale);
     src1.scale = scale;
     src1.first_size = src1.image.size();
