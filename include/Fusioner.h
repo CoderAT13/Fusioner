@@ -58,7 +58,7 @@ private:
 
     Mat dstR;
     Mat idstR;
-    double dstScale;
+    double dstScale, dstScaleQ;
 
     /**
      * @brief 寻找两张图片id匹配的aruco
@@ -96,7 +96,7 @@ private:
      * @param isInverse 是否逆转换
      * @return Point2f 转换后的点
      */
-    Point2f getOrigin(int x, int y, double scale = 1, bool isInverse = false);
+    Point2f getOrigin(int x, int y,  bool isInverse = false);
 
     /**
      * @brief 处理结果图像到 800 * 600 留白边，计算 dstR 和 idstR

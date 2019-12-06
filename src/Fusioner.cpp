@@ -1,5 +1,7 @@
 #include "Fusioner.h"
 
+
+bool BE_QUICK = true;
 float blend_strength = 5;
 int expos_comp_type = ExposureCompensator::GAIN_BLOCKS;
 int expos_comp_nr_feeds = 1;
@@ -119,6 +121,7 @@ Rect Fusioner::findRoi(ImageAruco first, ImageAruco second){
 }
 
 void Fusioner::getResult(){
+    double time1 = static_cast<double>( getTickCount());
     LOG("[INFO] Preparing Data...");
 
     vector<Point> corners;
@@ -127,19 +130,45 @@ void Fusioner::getResult(){
     vector<UMat> uimgs;
     vector<Mat> imgs;
     for(int i = 0; i < arucos.size(); i++){
-        
         corners.push_back(Point(arucos[i].roi.x, arucos[i].roi.y));
         sizes.push_back(Size(arucos[i].roi.width, arucos[i].roi.height));
+    }
+    Rect origin_dstRoi = resultRoi(corners, sizes);
+    dstScaleQ = 1;
+    if(BE_QUICK){
+        double scaleX = 800.0/origin_dstRoi.width;
+        double scaleY = 600.0/origin_dstRoi.height;
+        double fin_scale;
+        
+        if (scaleX > scaleY){
+            fin_scale = scaleY;
+        }else{
+            fin_scale =scaleX;
+        }
+        for(int i = 0; i < arucos.size(); i++){
+            resize(arucos[i].mask, arucos[i].mask, Size(), fin_scale, fin_scale);
+            arucos[i].scale = fin_scale;
+        }
+        dstScaleQ = fin_scale;
+    }
+    corners.clear();
+    sizes.clear();
+    for(int i = 0; i < arucos.size(); i++){
+        corners.push_back(Point(arucos[i].roi.x * arucos[i].scale, arucos[i].roi.y * arucos[i].scale));
+        sizes.push_back(Size(arucos[i].roi.width * arucos[i].scale, arucos[i].roi.height * arucos[i].scale));
         masks.push_back(UMat(arucos[i].mask.size(),CV_8U));
         arucos[i].mask.copyTo(masks[i]);
         // imshow("ad", arucos[i].mask);
         
         Mat rimage;
         warpAffine(arucos[i].image, rimage, arucos[i].R, arucos[i].size);
-        uimgs.push_back(UMat(arucos[i].size,16));
+        resize(rimage, rimage, Size(), arucos[i].scale, arucos[i].scale);
+        uimgs.push_back(UMat(rimage.size(), 16));
         rimage.copyTo(uimgs[i]);
         imgs.push_back(rimage);
     }
+
+    
 
 
     LOG("[INFO] Compensating exposure...");
@@ -216,7 +245,7 @@ void Fusioner::getResult(){
             blender->prepare(corners, sizes);
         }
         blender->feed(img_s, mask, corners[i]);
-        arucos[i].T = addDisplacement(arucos[i].R, arucos[i].roi.x - dstRoi.x, arucos[i].roi.y - dstRoi.y);
+        arucos[i].T = addDisplacement(arucos[i].R, arucos[i].roi.x - origin_dstRoi.x, arucos[i].roi.y - origin_dstRoi.y);
         invert(toSquare(arucos[i].T), arucos[i].iT);
 
     }
@@ -250,7 +279,8 @@ void Fusioner::getResult(){
         arucos[i].image.release();
     }
     LOG("[INFO] Finish! ");
-
+    double time2 = (static_cast<double>( getTickCount()) - time1)/getTickFrequency();
+    LOGV("getResult耗时：", time2);
 }
 
 void Fusioner::init(vector<Mat>& srcs){
@@ -377,17 +407,18 @@ void Fusioner::processDst(Mat& src){
         }
     }
     src = dst;
+
 }
 
-Point2f Fusioner::getOrigin(int x, int y, double scale, bool isInverse){
+Point2f Fusioner::getOrigin(int x, int y, bool isInverse){
     if(isInverse){
-        double param_x = 1.0*scale*SRC_WIDTH/S_WIDTH;
-        double param_y = 1.0*scale*SRC_HEIGHT/S_HEIGHT;
+        double param_x = 1.0*SRC_WIDTH/S_WIDTH;
+        double param_y = 1.0*SRC_HEIGHT/S_HEIGHT;
         return Point2f(x / param_x, y / param_x);
     }
     else{
-        double param_x = 1.0*scale*SRC_WIDTH/S_WIDTH;
-        double param_y = 1.0*scale*SRC_HEIGHT/S_HEIGHT;
+        double param_x = 1.0*SRC_WIDTH/S_WIDTH;
+        double param_y = 1.0*SRC_HEIGHT/S_HEIGHT;
         return Point2f(x * param_x, y * param_x);
     }
 
@@ -396,16 +427,21 @@ Point2f Fusioner::getOrigin(int x, int y, double scale, bool isInverse){
 Point2f Fusioner::getDstPos(Point2f src, int idx, bool isInverse){
     if(isInverse){
         change(src, idstR);
-        src = Point2f(1.0 * src.x / dstScale, 1.0 * src.y / dstScale);
+        src = Point2f(1.0 * src.x / (dstScale * dstScaleQ), 1.0 * src.y / (dstScale * dstScaleQ));
+        // src.x /= arucos[idx].scale;
+        // src.y /= arucos[idx].scale;
         change(src, arucos[idx].iT);
-        src = getOrigin(src.x, src.y, arucos[idx].scale, true);
+        src = getOrigin(src.x, src.y, true);
         return src;
     }
     else{
-        src = getOrigin(src.x, src.y, arucos[idx].scale);
+        src = getOrigin(src.x, src.y);
         change(src, arucos[idx].T);
-        src = Point2f(src.x * dstScale, src.y * dstScale);
+        // src.x *= arucos[idx].scale;
+        // src.y *= arucos[idx].scale;
+        src = Point2f(src.x * (dstScale * dstScaleQ), src.y * (dstScale * dstScaleQ));
         change(src, dstR);
+        LOG(src);
         return src;
     }
 
