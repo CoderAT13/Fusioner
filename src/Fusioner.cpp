@@ -135,6 +135,11 @@ void Fusioner::getResult(){
     }
     Rect origin_dstRoi = resultRoi(corners, sizes);
     dstScaleQ = 1;
+    vector<Mat> arucosMask;
+    for(int i = 0; i < arucos.size(); i++){
+        Mat tmp = arucos[i].mask.clone();
+        arucosMask.push_back(tmp);
+    }
     if(BE_QUICK){
         double scaleX = 800.0/origin_dstRoi.width;
         double scaleY = 600.0/origin_dstRoi.height;
@@ -146,7 +151,7 @@ void Fusioner::getResult(){
             fin_scale =scaleX;
         }
         for(int i = 0; i < arucos.size(); i++){
-            resize(arucos[i].mask, arucos[i].mask, Size(), fin_scale, fin_scale);
+            resize(arucosMask[i], arucosMask[i], Size(), fin_scale, fin_scale);
             arucos[i].scale = fin_scale;
         }
         dstScaleQ = fin_scale;
@@ -156,19 +161,20 @@ void Fusioner::getResult(){
     for(int i = 0; i < arucos.size(); i++){
         corners.push_back(Point(arucos[i].roi.x * arucos[i].scale, arucos[i].roi.y * arucos[i].scale));
         sizes.push_back(Size(arucos[i].roi.width * arucos[i].scale, arucos[i].roi.height * arucos[i].scale));
-        masks.push_back(UMat(arucos[i].mask.size(),CV_8U));
-        arucos[i].mask.copyTo(masks[i]);
+        masks.push_back(UMat(arucosMask[i].size(),CV_8U));
+        arucosMask[i].copyTo(masks[i]);
+        
         // imshow("ad", arucos[i].mask);
         
         Mat rimage;
         warpAffine(arucos[i].image, rimage, arucos[i].R, arucos[i].size);
         resize(rimage, rimage, Size(), arucos[i].scale, arucos[i].scale);
+        
         uimgs.push_back(UMat(rimage.size(), 16));
         rimage.copyTo(uimgs[i]);
         imgs.push_back(rimage);
     }
 
-    
 
 
     LOG("[INFO] Compensating exposure...");
@@ -222,7 +228,7 @@ void Fusioner::getResult(){
     Rect dstRoi = resultRoi(corners, sizes);
     for(int i = 0; i < arucos.size(); i++){
         Mat img = imgs[i];
-        Mat mask = arucos[i].mask;
+        Mat mask = arucosMask[i];
         Mat img_s;
         Mat dilated_mask, seam_mask;
         compensator->apply(i, corners[i], img, mask);
@@ -368,7 +374,6 @@ void Fusioner::changeImage(vector<Mat>& srcs){
     for(int i = 0; i < srcs.size(); i++){
         arucos[i].image = srcs[i].clone();
         srcs[i].release();
-        resize(arucos[i].image, arucos[i].image, Size(), arucos[i].scale, arucos[i].scale);
     }
     LOG("[INFO] Fusioner changeImage success!");
     getResult();
