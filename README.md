@@ -1,29 +1,29 @@
 # Image Fusion With Aruco
 
-## 环境要求
+## 1 环境要求 (Requirements)
 
 1. OpenCV 4
 2. OpenCV aruco模块
 3. OpenCV stitching模块
 
-## 编译方法
+## 2 编译方法 (Compiles)
 
 ```
 $ make
 ```
 
-## 使用用法
+## 3 使用用法 (Usage)
 
-MacOS下直接运行
+Run in MacOS
 
 ```
 $ cd ./bin
 $ ./main [mode] [input dir] [change dir]
 ```
 
-### 参数说明
+### 3.1 参数说明 (Params Instruction)
 
-#### mode
+#### 3.1.1 mode
 
 |mode  |说明  |
 |---------|---------|
@@ -31,7 +31,7 @@ $ ./main [mode] [input dir] [change dir]
 |IDEBUG     |反变换         |
 |change     |测试换图片         |
 
-#### input dir
+#### 3.1.2 input dir
 
 |input dir  |说明 |
 |:---------:|:---------:|
@@ -40,7 +40,7 @@ $ ./main [mode] [input dir] [change dir]
 |aruco5     |5张aruco初始化         |
 |aruco6     |6张aruco初始化         |
 
-#### change dir （mode = change时有效）
+#### 3.1.3 change dir （mode = change时有效）
 
 |change dir  |
 |:---------:|
@@ -53,38 +53,40 @@ $ ./main [mode] [input dir] [change dir]
 |xovis5  |
 |xovis6  |
 
+## 4 Algorithm Procedure
 
 
 
-## 程序算法流程
+### 4.1 General Proceduate
 
-### 整体流程
+<img src='docs/imgs/整体流程.jpg' width='500px'/>
 
-![](docs/imgs/整体流程.jpg)
 
-### 标记流程
+### 4.2 Mark Procedure
+
+<img src='docs/imgs/整体流程.jpg' width='500px'/>
 
 ![](docs/imgs/标记流程.jpg)
 
-### 坐标转换关系
+### Coordinate Tranformation
 
-![](docs/imgs/坐标计算.jpg)
+<img src='docs/imgs/坐标计算.jpg' width='500px'/>
 
-## 运行展示
+## 5 Result
 
-### 结果图 aruco6
+### 5.1 Result 1: aruco6
 
 ![](docs/imgs/init.png)
 
-### 正变换（320，240） => （800，600）
+### 5.2 Transformation（320，240） => （800，600）
 
 ![](docs/imgs/z.png)
 
-### 逆变换（800，600） => （320，240）
+### 5.3 Reverse Transformation（800，600） => （320，240）
 
 ![](docs/imgs/n.png)
 
-### 变更图像 aruco6 => xovis3
+### 5.4 Another set of Images' result  aruco6 => xovis3
 
 ![](docs/imgs/change.png)
 
