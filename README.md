@@ -1,6 +1,6 @@
 # Image Fusion With Aruco
 
-A image funsion proposal for vertical cameras' view fusion and positioning, using in passenger tracking.
+A image funsion proposal for vertical cameras' view fusion and positioning, using in distributed passenger tracking computation.
 
 ## 1 Requirements
 
@@ -80,15 +80,19 @@ $ ./main [mode] [input dir] [change dir]
 
 ![](docs/imgs/init.png)
 
-### 5.2 Transformation（320，240） => （800，600）
+### 5.2 4 Images Transformation（320，240） => （800，600）
 
 ![](docs/imgs/z.png)
+
+As you can see, when I click a point in one of the camera views (320, 240), the composite view will show up the correct points.
 
 ### 5.3 Reverse Transformation（800，600） => （320，240）
 
 ![](docs/imgs/n.png)
 
-### 5.4 Another set of Images' result  aruco6 => xovis3
+When I click a point in the composite view, and similar a track. All the camera view will show up the correct points.
+
+### 5.4 Another set of Images' result:  aruco6 => xovis3
 
 ![](docs/imgs/change.png)
 
