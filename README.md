@@ -1,18 +1,20 @@
 # Image Fusion With Aruco
 
-## 1 环境要求 (Requirements)
+A image funsion proposal for vertical cameras' view fusion and positioning, using in passenger tracking.
+
+## 1 Requirements
 
 1. OpenCV 4
 2. OpenCV aruco模块
 3. OpenCV stitching模块
 
-## 2 编译方法 (Compiles)
+## 2 Compiles
 
 ```
 $ make
 ```
 
-## 3 使用用法 (Usage)
+## 3 Usage
 
 Run in MacOS
 
@@ -21,7 +23,7 @@ $ cd ./bin
 $ ./main [mode] [input dir] [change dir]
 ```
 
-### 3.1 参数说明 (Params Instruction)
+### 3.1 Params Instruction
 
 #### 3.1.1 mode
 
@@ -40,7 +42,7 @@ $ ./main [mode] [input dir] [change dir]
 |aruco5     |5张aruco初始化         |
 |aruco6     |6张aruco初始化         |
 
-#### 3.1.3 change dir （mode = change时有效）
+#### 3.1.3 change dir
 
 |change dir  |
 |:---------:|
@@ -55,7 +57,7 @@ $ ./main [mode] [input dir] [change dir]
 
 ## 4 Algorithm Procedure
 
-
+<img src='docs/imgs/brief-en.jpg' width='600px'/>
 
 ### 4.1 General Proceduate
 
@@ -68,11 +70,11 @@ $ ./main [mode] [input dir] [change dir]
 
 ![](docs/imgs/标记流程.jpg)
 
-### Coordinate Tranformation
+### 4.3 Coordinate Tranformation
 
 <img src='docs/imgs/坐标计算.jpg' width='500px'/>
 
-## 5 Result
+## 5 Results
 
 ### 5.1 Result 1: aruco6
 
